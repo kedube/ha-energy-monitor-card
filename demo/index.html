@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Energy Monitor Card · Demo</title>
+    <style>
+      :root,
+      body.dark {
+        --primary-background-color: #111214;
+        --card-background-color: #1c1d21;
+        --ha-card-background: #1c1d21;
+        --primary-text-color: #e6e8eb;
+        --secondary-text-color: #9aa1ab;
+        --divider-color: rgba(255, 255, 255, 0.1);
+        --ha-card-box-shadow: none;
+        --panel: #17181b;
+        --button: #26282d;
+        --button-on: #33363d;
+      }
+      body.light {
+        --primary-background-color: #f2f3f5;
+        --card-background-color: #ffffff;
+        --ha-card-background: #ffffff;
+        --primary-text-color: #1f2328;
+        --secondary-text-color: #69707a;
+        --divider-color: rgba(0, 0, 0, 0.1);
+        --panel: #ffffff;
+        --button: #eceef1;
+        --button-on: #dfe3e8;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: Roboto, "Segoe UI", system-ui, -apple-system, sans-serif;
+        background: var(--primary-background-color);
+        color: var(--primary-text-color);
+      }
+      main {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 24px;
+        padding: 24px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+      @media (max-width: 900px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+      }
+      aside {
+        background: var(--panel);
+        border: 1px solid var(--divider-color);
+        border-radius: 12px;
+        padding: 16px;
+        align-self: start;
+        position: sticky;
+        top: 24px;
+      }
+      h1 {
+        font-size: 17px;
+        margin: 0 0 4px;
+      }
+      h2 {
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--secondary-text-color);
+        margin: 18px 0 8px;
+      }
+      p.hint {
+        font-size: 12.5px;
+        color: var(--secondary-text-color);
+        margin: 0 0 8px;
+        line-height: 1.45;
+      }
+      .buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      button {
+        font: inherit;
+        font-size: 12.5px;
+        color: inherit;
+        background: var(--button);
+        border: 1px solid var(--divider-color);
+        border-radius: 8px;
+        padding: 6px 10px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: var(--button-on);
+      }
+      button.on {
+        background: var(--button-on);
+        border-color: var(--secondary-text-color);
+      }
+      button.primary {
+        background: #ff4d4f22;
+        border-color: #ff4d4f88;
+      }
+      button.restore {
+        background: #4c9aff22;
+        border-color: #4c9aff88;
+      }
+      button.gen {
+        background: #ff8a1f22;
+        border-color: #ff8a1f88;
+      }
+      label.range {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        font-size: 12.5px;
+        gap: 4px;
+        color: var(--secondary-text-color);
+      }
+      label.range input {
+        grid-column: 1 / -1;
+        width: 100%;
+      }
+      #log {
+        font-size: 12px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        color: var(--secondary-text-color);
+        max-height: 160px;
+        overflow: auto;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      #log li {
+        padding: 2px 0;
+      }
+      section.cards {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        min-width: 0;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        align-items: flex-start;
+      }
+      .frame {
+        min-width: 0;
+      }
+      .frame > .caption {
+        font-size: 12px;
+        color: var(--secondary-text-color);
+        margin: 0 0 6px 2px;
+      }
+      #main-frame {
+        width: 520px;
+        max-width: 100%;
+      }
+      .sections-frame {
+        /* Mimics a 12-column section card with a fixed row count. */
+        width: 492px;
+        height: 376px;
+      }
+      #phone-frame {
+        width: 344px;
+      }
+    </style>
+  </head>
+  <body class="dark">
+    <main>
+      <aside>
+        <h1>Energy Monitor Card</h1>
+        <p class="hint">A simulated home. Cut the utility and watch the transfer switch cut over to the generator.</p>
+
+        <h2>Utility</h2>
+        <div class="buttons">
+          <button class="primary" id="cut">Cut utility power</button>
+          <button class="restore" id="restore">Restore utility</button>
+          <button class="gen" id="exercise">Run generator exercise</button>
+        </div>
+
+        <h2>Loads</h2>
+        <div class="buttons" id="loads"></div>
+
+        <h2>Sources</h2>
+        <div class="buttons">
+          <button id="solar" class="on">Solar</button>
+          <button id="battery" class="on">Battery</button>
+        </div>
+
+        <h2>View</h2>
+        <div class="buttons">
+          <button id="theme">Light theme</button>
+          <button id="speed">Fast timeline</button>
+        </div>
+        <label class="range" style="margin-top: 10px">
+          Main card width <span id="width-out">520px</span>
+          <input id="width" type="range" min="300" max="960" value="520" />
+        </label>
+
+        <h2>Timeline</h2>
+        <ul id="log"></ul>
+      </aside>
+
+      <section class="cards">
+        <div class="frame" id="main-frame">
+          <div class="caption">Full setup: utility, generator, transfer switch, solar, battery, devices</div>
+          <div id="main"></div>
+        </div>
+        <div class="row">
+          <div class="frame sections-frame">
+            <div class="caption">Sections view, 6 rows, no ATS sensor (position inferred)</div>
+            <div id="minimal" style="height: calc(100% - 22px)"></div>
+          </div>
+          <div class="frame" id="phone-frame">
+            <div class="caption">Phone width</div>
+            <div id="phone"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="./demo.js"></script>
+  </body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "name": "energy-monitor-card",
+  "version": "1.0.0",
+  "description": "Home Assistant Lovelace card that shows utility, generator, solar and battery power flow with automatic transfer-switch cut-over visualisation.",
+  "type": "module",
+  "main": "dist/energy-monitor-card.js",
+  "license": "GPL-3.0-only",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs --serve",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm test && npm run build"
+  },
+  "dependencies": {
+    "lit": "^3.3.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0"
+  }
+}
