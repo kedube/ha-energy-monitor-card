@@ -1,5 +1,10 @@
 # Energy Monitor Card
 
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories)
+[![Latest release](https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Fgithub.com%2Fkedube%2Fha-energy-monitor-card%2Freleases.atom&query=%2F%2F%2A%5Blocal-name%28%29%3D%27entry%27%5D%5B1%5D%2F%2A%5Blocal-name%28%29%3D%27title%27%5D&label=release&color=blue)](https://github.com/kedube/ha-energy-monitor-card/releases/latest)
+[![Release workflow](https://github.com/kedube/ha-energy-monitor-card/actions/workflows/release.yml/badge.svg)](https://github.com/kedube/ha-energy-monitor-card/actions/workflows/release.yml)
+[![License: GPL-3.0](https://img.shields.io/github/license/kedube/ha-energy-monitor-card)](LICENSE)
+
 A Home Assistant dashboard card that shows where your home's power is coming from and where it's going. It supports **utility, standby generator, solar and battery** sources, and you can watch the **transfer switch cut over** when the utility fails.
 
 ![Cut-over from utility to generator](docs/cutover.gif)
@@ -230,6 +235,17 @@ The source is TypeScript and Lit, bundled with esbuild into `dist/energy-monitor
 | `src/trend.ts` | Bucketed load history and recorder back-fill |
 | `src/graphics.ts` | Custom SVG glyphs: pylon, generator, home, solar and battery |
 | `src/editor.ts` | Visual editor schema |
+
+### Releasing
+
+The version in `package.json` is the release version. It has a two-digit minor that runs from 1.00 to 1.99, then rolls over to 2.00. Every push to `main` runs CI. When CI passes and `package.json` is higher than the latest release, the version is published as a GitHub release with the same bare tag and title, such as `1.01`. Until the version is raised, pushes are tested but not released.
+
+```sh
+npm run bump           # 1.00 → 1.01 … 1.99 → 2.00, and rebuild dist/
+npm run bump -- 2.00   # jump to a specific higher version
+```
+
+Commit the changed `package.json`, `package-lock.json` and `dist/` together.
 
 ## License
 

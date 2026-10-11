@@ -54,7 +54,8 @@ import type {
   TapConfig,
 } from "./types";
 
-const VERSION = "1.0.0";
+declare const __VERSION__: string;
+const VERSION = __VERSION__;
 const CARD_TAG = "energy-monitor-card";
 
 const DEFAULT_COLORS: Required<ColorConfig> = {

@@ -1,0 +1,55 @@
+name: Release
+
+# Every push to main runs CI, then publishes the version in package.json as a release
+# if it is higher than the latest one. Until the version is raised (npm run bump),
+# pushes are tested but not released. Tags and titles are the bare version, e.g. 1.01.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One release at a time, in push order, so two quick pushes never race for the same tag.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    name: Publish release
+    needs: ci
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Compare package.json with the latest release
+        id: version
+        run: node scripts/release/check.mjs
+
+      # CI has already confirmed that the committed bundle matches a fresh build of this commit.
+      - name: Publish GitHub release
+        if: steps.version.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "$VERSION" dist/energy-monitor-card.js \
+            --target "$GITHUB_SHA" \
+            --title "$VERSION" \
+            --generate-notes
+          echo "Released $VERSION" >> "$GITHUB_STEP_SUMMARY"

@@ -1,4 +1,7 @@
 import * as esbuild from "esbuild";
+import { readFileSync } from "node:fs";
+
+const { version } = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8"));
 
 const serve = process.argv.includes("--serve");
 
@@ -13,6 +16,8 @@ const options = {
   // The dev server builds in memory so the committed dist/ bundle stays a production build.
   write: !serve,
   legalComments: "none",
+  // package.json is the single source of the version shown in the console banner.
+  define: { __VERSION__: JSON.stringify(version) },
   logLevel: "info",
 };
 

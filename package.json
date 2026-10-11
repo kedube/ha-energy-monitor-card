@@ -1,6 +1,7 @@
 {
   "name": "energy-monitor-card",
-  "version": "1.0.0",
+  "version": "1.00",
+  "private": true,
   "description": "Home Assistant Lovelace card that shows utility, generator, solar and battery power flow with automatic transfer-switch cut-over visualisation.",
   "type": "module",
   "main": "dist/energy-monitor-card.js",
@@ -10,14 +11,39 @@
     "dev": "node build.mjs --serve",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "check": "npm run typecheck && npm test && npm run build"
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "check": "npm run typecheck && npm test && npm run build",
+    "bump": "node scripts/release/bump.mjs"
   },
   "dependencies": {
     "lit": "^3.3.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "esbuild": "^0.25.0",
+    "happy-dom": "^20.14.5",
     "typescript": "^5.8.0",
     "vitest": "^3.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kedube/ha-energy-monitor-card.git"
+  },
+  "homepage": "https://github.com/kedube/ha-energy-monitor-card#readme",
+  "bugs": {
+    "url": "https://github.com/kedube/ha-energy-monitor-card/issues"
+  },
+  "keywords": [
+    "home-assistant",
+    "hacs",
+    "lovelace",
+    "custom-card",
+    "generator",
+    "transfer-switch",
+    "energy"
+  ],
+  "engines": {
+    "node": ">=20"
   }
 }
