@@ -275,6 +275,24 @@ test.describe("layout", () => {
     }
   });
 
+  test("device labels stay above the load graph under Home Assistant's taller line-height", async ({ page }) => {
+    await gotoDemo(page);
+    // Home Assistant sets a 1.6 line-height on the page, which every card inherits.
+    await page.addStyleTag({ content: "html, body { line-height: 1.6; }" });
+    for (const px of [520, 900]) {
+      await setMainWidth(page, px);
+      for (const id of CARD_IDS) {
+        const gap = await card(page, id).evaluate((host) => {
+          const root = host.shadowRoot!;
+          const divider = root.querySelector(".trend")!.getBoundingClientRect().top;
+          const names = [...root.querySelectorAll(".device .dev-name")].map((n) => n.getBoundingClientRect().bottom);
+          return divider - Math.max(...names);
+        });
+        expect(gap, `${id} @${px}px: space between device names and the load graph`).toBeGreaterThan(0);
+      }
+    }
+  });
+
   test("the light theme changes the card background and text", async ({ page }) => {
     await gotoDemo(page);
     const main = card(page, "main");

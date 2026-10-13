@@ -577,6 +577,8 @@ export const cardStyles = css`
     transform: translateX(-50%);
     cursor: pointer;
     text-align: center;
+    /* Fixed so the label stack fits DEVICE_BAND whatever line-height the dashboard sets. */
+    line-height: 1.2;
   }
 
   .dev-icon {

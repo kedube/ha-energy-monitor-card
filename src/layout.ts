@@ -81,7 +81,11 @@ export interface LayoutInput {
 /** Design reference size; everything scales from here. */
 export const REF_WIDTH = 460;
 export const REF_HEIGHT = 200;
-export const DEVICE_BAND = 78;
+/**
+ * Bus, icon and label stack below the flow diagram: 48 to the icon's foot, then
+ * value (5 + 12 × 1.2) and name (10 × 1.2), plus a little clearance.
+ */
+export const DEVICE_BAND = 82;
 const EXTRA_LINE = 12;
 
 const deviceBand = (devices: boolean, extraLine = false) => (devices ? DEVICE_BAND + (extraLine ? EXTRA_LINE : 0) : 0);
