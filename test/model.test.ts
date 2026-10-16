@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeSnapshot, inferAts, readPower } from "../src/model";
+import { computeSnapshot, historyEntityIds, inferAts, readPower } from "../src/model";
 import type { CardConfig } from "../src/types";
 import { KW, W, states } from "./helpers";
 
@@ -32,6 +32,18 @@ describe("unit handling", () => {
   });
 });
 
+it("requests only source and load sensors for trend history", () => {
+  const cfg: CardConfig = {
+    ...base,
+    home: { entity: "sensor.home", current: "sensor.home_current" },
+    devices: [{ entity: "sensor.ev", current: "sensor.ev_current", switch_entity: "switch.ev" }],
+  };
+  expect(historyEntityIds(cfg)).toEqual([
+    "sensor.grid", "sensor.grid_v", "binary_sensor.utility",
+    "sensor.gen", "sensor.gen_v", "sensor.gen_status", "sensor.home",
+  ]);
+});
+
 describe("utility availability", () => {
   it("prefers the status entity over voltage", () => {
     const snap = computeSnapshot(base, states({ "binary_sensor.utility": "off", "sensor.grid_v": 240, "sensor.grid": [0, W] }));
@@ -55,6 +67,15 @@ describe("utility availability", () => {
     expect(computeSnapshot(cfg, states({ "sensor.imp": [0, W], "sensor.exp": [900, W] })).grid?.power).toBe(-900);
     const inverted: CardConfig = { type: "x", grid: { entity: "sensor.g", invert: true } };
     expect(computeSnapshot(inverted, states({ "sensor.g": [500, W] })).grid?.power).toBe(-500);
+  });
+
+  it("does not count a stale utility meter reading during an outage", () => {
+    const cfg: CardConfig = { type: "x", grid: { entity: "sensor.grid", status: "binary_sensor.utility" } };
+    const snap = computeSnapshot(cfg, states({ "binary_sensor.utility": "off", "sensor.grid": [3000, W] }));
+    expect(snap.grid?.power).toBe(3000);
+    expect(snap.flows.grid).toBe(0);
+    expect(snap.supply.grid).toBe(0);
+    expect(snap.home.power).toBe(0);
   });
 });
 

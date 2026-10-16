@@ -30,6 +30,7 @@ import {
   DEFAULT_SOURCE_THRESHOLD,
   computeSnapshot,
   dominantSource,
+  historyEntityIds,
   trackedEntityIds,
   type Snapshot,
 } from "./model";
@@ -203,7 +204,13 @@ export class EnergyMonitorCard extends LitElement {
     // The visual editor calls setConfig on every keystroke; keep history and
     // phase timers unless the entities or window actually changed.
     const windowMin = cfg.trend_window ?? 60;
-    const signature = `${trackedEntityIds(cfg).join("|")}#${windowMin}#${cfg.cooldown_window ?? ""}`;
+    const signature = JSON.stringify([
+      historyEntityIds(cfg), windowMin, cfg.cooldown_window,
+      cfg.grid?.invert, cfg.grid?.outage_voltage, cfg.grid?.threshold,
+      cfg.generator?.threshold, cfg.generator?.running_states, cfg.generator?.starting_states,
+      cfg.transfer_switch?.generator_states, cfg.transfer_switch?.utility_states, cfg.transfer_switch?.open_states,
+      cfg.battery?.invert,
+    ]);
     if (signature !== this._signature) {
       this._signature = signature;
       this._tracker = new PhaseTracker(this._cooldownMs);
@@ -412,7 +419,7 @@ export class EnergyMonitorCard extends LitElement {
   }
 
   private get _storageKey(): string {
-    return `${CARD_TAG}:${hashString(trackedEntityIds(this._config!).join("|"))}`;
+    return `${CARD_TAG}:${hashString(historyEntityIds(this._config!).join("|"))}`;
   }
 
   private _savePhase(): void {
@@ -427,7 +434,9 @@ export class EnergyMonitorCard extends LitElement {
 
   private _restorePhase(snap: Snapshot): void {
     try {
-      const raw = localStorage.getItem(this._storageKey);
+      // Earlier releases included every device and detail sensor in this key.
+      const oldKey = `${CARD_TAG}:${hashString(trackedEntityIds(this._config!).join("|"))}`;
+      const raw = localStorage.getItem(this._storageKey) ?? localStorage.getItem(oldKey);
       if (!raw) return;
       const saved = JSON.parse(raw) as PhaseState;
       if (!saved?.phase || !Number.isFinite(saved.since)) return;
@@ -441,14 +450,14 @@ export class EnergyMonitorCard extends LitElement {
   }
 
   private async _loadHistory(): Promise<void> {
-    this._historyRequested = true;
     const hass = this._hass;
     const cfg = this._config;
     const trend = this._trend;
     if (!hass?.callWS || !cfg || !trend) return;
+    this._historyRequested = true;
     const end = Date.now();
     const start = end - trend.windowMs;
-    const history = await fetchHistory(hass, trackedEntityIds(cfg), start, end);
+    const history = await fetchHistory(hass, historyEntityIds(cfg), start, end);
     if (!history || trend !== this._trend) return;
     const replayed = new Trend(trend.windowMs, trend.count);
     replayHistory(history, this._get, start, end, trend.bucketMs / 4, (t, get) => {

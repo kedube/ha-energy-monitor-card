@@ -163,10 +163,11 @@ export function replayHistory(
     if (cache.has(id)) return cache.get(id);
     const current = live(id);
     const s = series.get(id);
-    let result: HassEntity | undefined = current;
-    if (s && current) {
-      result = { ...current, state: s.i >= 0 ? s.states[s.i] : "unavailable" };
-    }
+    // Recorder can omit an entity entirely. A live reading must not be
+    // projected backwards into gaps in its history.
+    const result: HassEntity | undefined = current
+      ? { ...current, state: s && s.i >= 0 ? s.states[s.i] : "unavailable" }
+      : undefined;
     cache.set(id, result);
     return result;
   };

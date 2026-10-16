@@ -44,7 +44,7 @@ describe("Trend", () => {
 });
 
 describe("replayHistory", () => {
-  it("answers each moment with the state recorded at that time", () => {
+  it("answers each moment with the recorded state and leaves unrecorded entities unavailable", () => {
     const live = states({ "sensor.p": ["999", { unit_of_measurement: "W" }], "sensor.untracked": "live" });
     const history = {
       "sensor.p": [
@@ -57,9 +57,9 @@ describe("replayHistory", () => {
       seen.push([t, get("sensor.p")?.state, get("sensor.untracked")?.state, get("sensor.p")?.attributes.unit_of_measurement]),
     );
     expect(seen).toEqual([
-      [5_000, "unavailable", "live", "W"],
-      [15_000, "100", "live", "W"],
-      [25_000, "200", "live", "W"],
+      [5_000, "unavailable", "unavailable", "W"],
+      [15_000, "100", "unavailable", "W"],
+      [25_000, "200", "unavailable", "W"],
     ]);
   });
 });

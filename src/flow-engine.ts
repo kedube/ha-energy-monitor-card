@@ -126,10 +126,8 @@ export class FlowEngine {
     while (st.dots.length > count) st.dots.pop()!.remove();
     while (st.colors.length < count) st.colors.push(this.pickColor(st));
     st.colors.length = count;
-    // Keep colours in the current palette if the source set changed entirely.
-    for (let i = 0; i < count; i++) {
-      if (!spec.colors.includes(st.colors[i])) st.colors[i] = this.pickColor(st);
-    }
+    // Existing particles retain their source colour during a cut-over; only
+    // particles entering the wire pick from the new palette.
     for (let i = 0; i < count; i++) this.paint(st, i);
   }
 

@@ -289,6 +289,19 @@ export function trackedEntityIds(cfg: CardConfig): string[] {
   return [...new Set(collectIds(cfg))];
 }
 
+/** Sensors needed to reconstruct load and source changes from recorder history. */
+export function historyEntityIds(cfg: CardConfig): string[] {
+  const g = cfg.grid;
+  const n = cfg.generator;
+  const b = cfg.battery;
+  return [...new Set([
+    g?.entity, g?.import_entity, g?.export_entity, g?.voltage, g?.status,
+    n?.entity, n?.voltage, n?.running, cfg.transfer_switch?.entity,
+    cfg.home?.entity, cfg.solar?.entity,
+    b?.entity, b?.charge_entity, b?.discharge_entity,
+  ].filter((id): id is string => !!id))];
+}
+
 const pos = (n: number | null | undefined) => (n !== null && n !== undefined && n > 0 ? n : 0);
 
 export function computeSnapshot(cfg: CardConfig, get: StateGetter): Snapshot {
@@ -313,7 +326,7 @@ export function computeSnapshot(cfg: CardConfig, get: StateGetter): Snapshot {
 
   // Only the source the transfer switch is connected to can feed the home. This also keeps
   // panel-side meters (which read generator power as "grid" during an outage) from double counting.
-  const gridConnected = !!grid && (ats === null || ats === "utility");
+  const gridConnected = !!grid && grid.available !== false && (ats === null || ats === "utility");
   const genConnected = !!genRaw && (ats === null || ats === "generator");
   const gridNet = gridConnected ? (grid?.power ?? 0) : 0;
 

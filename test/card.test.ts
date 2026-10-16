@@ -17,6 +17,7 @@ import {
 } from "./dom";
 import { EnergyMonitorCard, normalizeConfig } from "../src/energy-monitor-card";
 import { configForm } from "../src/editor";
+import { trackedEntityIds } from "../src/model";
 import type { CardConfig } from "../src/types";
 
 useCardEnvironment();
@@ -517,7 +518,7 @@ describe("transitions", () => {
     expect($(card, "circle.spark")).toBeNull();
   });
 
-  it("switches the animated feed from utility to generator colour", async () => {
+  it("lets new generator particles replace utility particles along the feed", async () => {
     const f = hassFactory();
     const card = await mount(CFG, f.make(UTILITY));
     expect(flowIds(card)).toEqual(["feed", "grid"]);
@@ -526,6 +527,8 @@ describe("transitions", () => {
 
     await push(card, f.make(ON_GENERATOR));
     expect(flowIds(card)).toEqual(["feed", "generator"]);
+    expect(feedFill()).toEqual(["#4c9aff"]);
+    await vi.advanceTimersByTimeAsync(2000);
     expect(feedFill()).toEqual(["#ff8a1f"]);
   });
 
@@ -633,6 +636,37 @@ describe("persistence", () => {
     await push(card, f.make(OUTAGE));
     expect(pill(card)?.label).toBe("Power outage");
   });
+
+  it("restores a phase saved under the previous all-entity key", async () => {
+    const cfg: CardConfig = {
+      ...CFG,
+      grid: { ...CFG.grid, current: "sensor.grid_current" },
+      devices: [{ entity: "sensor.ev" }],
+    };
+    let hash = 5381;
+    for (const ch of trackedEntityIds(cfg).join("|")) hash = ((hash << 5) + hash + ch.charCodeAt(0)) | 0;
+    localStorage.setItem(`energy-monitor-card:${(hash >>> 0).toString(36)}`, JSON.stringify({
+      phase: "cooldown", since: T0 - 30_000, lastGeneratorEnd: T0 - 30_000,
+    }));
+    const card = await mount(cfg, hassFactory().make(COOLDOWN));
+    expect(pill(card)).toMatchObject({ label: "Generator cooldown", dur: "30s" });
+  });
+});
+
+it("fetches history only for source and load sensors, and keeps it when devices change", async () => {
+  const f = hassFactory();
+  const cfg: CardConfig = { ...CFG, devices: [{ entity: "sensor.ev", current: "sensor.ev_current" }] };
+  const card = await mount(cfg, f.make(UTILITY));
+  expect(f.callWS).toHaveBeenCalledTimes(1);
+  const request = f.callWS.mock.calls[0][0];
+  expect(request.entity_ids).not.toContain("sensor.ev");
+  expect(request.entity_ids).not.toContain("sensor.ev_current");
+  card.setConfig({ ...cfg, devices: [{ entity: "sensor.hvac" }] });
+  await settle(card);
+  expect(f.callWS).toHaveBeenCalledTimes(1);
+  card.setConfig({ ...cfg, grid: { ...cfg.grid, invert: true } });
+  await settle(card);
+  expect(f.callWS).toHaveBeenCalledTimes(2);
 });
 
 describe("lifecycle", () => {
