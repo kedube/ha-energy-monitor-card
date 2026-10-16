@@ -1,6 +1,6 @@
 {
   "name": "energy-monitor-card",
-  "version": "1.01",
+  "version": "1.02",
   "private": true,
   "description": "Home Assistant Lovelace card that shows utility, generator, solar and battery power flow with automatic transfer-switch cut-over visualisation.",
   "type": "module",
